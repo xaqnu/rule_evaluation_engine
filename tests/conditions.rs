@@ -5,6 +5,9 @@ use rule_evaluation_enigine::{
     evaluar::evaluar,
 };
 
+fn un_permiso_que_siempre_falla() -> Premisa {
+    return Premisa::permiso(vec![Condicion::new("falla")], (1, 1));
+}
 fn un_permiso_que_siempre_aplica() -> Premisa {
     return Premisa::permiso(vec![Condicion::new("true")], (1, 1));
 }
@@ -13,7 +16,7 @@ fn un_permiso_que_nunca_aplica() -> Premisa {
 }
 #[test]
 fn cri_001() {
-    let a: Resultado = evaluar(Some(vec![un_permiso_que_siempre_aplica()]), None);
+    let a: Resultado = evaluar(Some(&vec![un_permiso_que_siempre_aplica()]), None);
 
     assert_eq!(
         a,
@@ -24,10 +27,10 @@ fn cri_001() {
 
 #[test]
 fn cri_002() {
-    let a: Resultado = evaluar(None, Some(HashMap::new()));
+    let a: Resultado = evaluar(None, Some(&HashMap::new()));
     let b: Resultado = evaluar(
         None,
-        Some(HashMap::from([(
+        Some(&HashMap::from([(
             "accion".to_owned(),
             "no existe".to_owned(),
         )])),
@@ -47,15 +50,15 @@ fn cri_002() {
 #[test]
 fn cri_003_sin_errores() {
     let a: Resultado = evaluar(
-        Some(vec![]),
-        Some(HashMap::from([(
+        Some(&vec![]),
+        Some(&HashMap::from([(
             "accion".to_owned(),
             "registered".to_owned(),
         )])),
     );
     let b: Resultado = evaluar(
-        Some(vec![un_permiso_que_nunca_aplica()]),
-        Some(HashMap::from([(
+        Some(&vec![un_permiso_que_nunca_aplica()]),
+        Some(&HashMap::from([(
             "accion".to_owned(),
             "registered".to_owned(),
         )])),
@@ -69,5 +72,29 @@ fn cri_003_sin_errores() {
         b,
         Resultado::new(Deny, "No rules apply"),
         "Hay permisos configurados pero no aplican"
+    );
+}
+
+#[test]
+fn cri_003_con_errores() {
+    let premisas = vec![
+        un_permiso_que_nunca_aplica(),
+        un_permiso_que_siempre_falla(),
+    ];
+    let uuid = premisas.get(1).unwrap().uuid();
+    let a: Resultado = evaluar(
+        Some(&premisas),
+        Some(&HashMap::from([(
+            "accion".to_owned(),
+            "registered".to_owned(),
+        )])),
+    );
+
+    assert_eq!(
+        a,
+        Resultado::new(
+            Deny,
+            &format!("No rules apply\nError  en premisa con id {}", uuid,)
+        )
     );
 }
