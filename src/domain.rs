@@ -66,14 +66,20 @@ pub enum Evaluacion {
 
 #[derive(Debug,PartialEq,Eq)]
 pub struct Resultado {
-    evaluacion: Evaluacion,
+    decision: Decision,
     backtrace: String
 }
 
+#[derive(Debug,PartialEq,Eq)]
+pub enum Decision {
+    Allow,
+    Deny,
+}
+
 impl Resultado {
-    pub fn new(evaluacion: Evaluacion, backtrace: &str) -> Self {
+    pub fn new(decision: Decision, backtrace: &str) -> Self {
         let backtrace = backtrace.to_owned();
-        Self { evaluacion,backtrace }
+        Self { decision,backtrace }
     }
 }
 
