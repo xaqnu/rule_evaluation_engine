@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use uuid::Uuid;
 
 use crate::domain::{
@@ -12,14 +14,14 @@ pub struct Condicion {
 }
 
 impl Condicion {
-    pub fn new(expresion_cell: &str) -> Self {
-        let expresion_cell = expresion_cell.to_owned();
+    pub fn new(expresion_cell: impl Into<String>) -> Self {
+        let expresion_cell = expresion_cell.into();
         Self { expresion_cell }
     }
 }
 
 impl Evaluable for Condicion {
-    fn evaluar(&self) -> Evaluacion {
+    fn evaluar(&self,payload: &HashMap<String,String>) -> Evaluacion {
         match self.expresion_cell.as_str() {
             "true" => Aplica,
             "false" => NoAplica,
@@ -49,10 +51,10 @@ impl PremisaDatos {
 }
 
 impl Evaluable for PremisaDatos {
-    fn evaluar(&self) -> Evaluacion {
+    fn evaluar(&self,payload: &HashMap<String,String>) -> Evaluacion {
         let mut evaluacion_final = NoAplica;
         for condicion in &self.condiciones {
-            let evaluacion = condicion.evaluar();
+            let evaluacion = condicion.evaluar(payload);
             match evaluacion_final {
                 NoAplica => evaluacion_final = evaluacion,
                 Aplica | Error => return evaluacion_final,
@@ -84,10 +86,10 @@ impl Premisa {
 }
 
 impl Evaluable for Premisa {
-    fn evaluar(&self) -> Evaluacion {
+    fn evaluar(&self,payload: &HashMap<String,String>) -> Evaluacion {
         match self {
-            Permiso(p) => p.evaluar(),
-            Excepcion(p) => p.evaluar(),
+            Permiso(p) => p.evaluar(payload),
+            Excepcion(p) => p.evaluar(payload),
         }
     }
 }
@@ -112,8 +114,8 @@ pub enum Decision {
 }
 
 impl Resultado {
-    pub fn new(decision: Decision, backtrace: &str) -> Self {
-        let backtrace = backtrace.to_owned();
+    pub fn new(decision: Decision, backtrace: impl Into<String>) -> Self {
+        let backtrace = backtrace.into();
         Self {
             decision,
             backtrace,
@@ -122,5 +124,5 @@ impl Resultado {
 }
 
 pub trait Evaluable {
-    fn evaluar(&self) -> Evaluacion;
+    fn evaluar(&self,payload: &HashMap<String,String>) -> Evaluacion;
 }

@@ -34,7 +34,7 @@ fn evaluar_with_valid_action(
 ) -> Resultado {
     let mut traza = "No rules apply".to_owned();
     for premisa in premisas {
-        let evaluacion: Evaluacion = premisa.evaluar();
+        let evaluacion: Evaluacion = premisa.evaluar(payload);
         match evaluacion {
             Aplica | NoAplica => (),
             Error => traza = traza + "\nError  en premisa con id " + &premisa.uuid().to_string(),
