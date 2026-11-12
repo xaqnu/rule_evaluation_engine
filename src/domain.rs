@@ -35,6 +35,7 @@ pub type Precedencia = (u8, u8);
 #[derive(Debug, PartialEq, Eq)]
 pub struct PremisaDatos {
     uuid: Uuid,
+    activo : bool,
     condiciones: Vec<Condicion>,
     precedencia: Precedencia,
 }
@@ -44,6 +45,7 @@ impl PremisaDatos {
         let uuid = Uuid::new_v4();
         Self {
             uuid,
+            activo: true,
             condiciones,
             precedencia,
         }
@@ -79,8 +81,18 @@ impl Premisa {
 
     pub fn uuid(&self) -> &Uuid {
         match self {
-            Permiso(p) => return &p.uuid,
-            Excepcion(p) => return &p.uuid,
+            Permiso(p) | Excepcion(p) => return &p.uuid,
+        }
+    }
+
+    pub fn desactivar(& mut self)  {
+       match self {
+            Permiso(p) | Excepcion(p) => p.activo = false,
+       } 
+    }
+    pub fn esta_activo(&self) -> bool{
+        match self {
+            Permiso(p) | Excepcion(p) => p.activo
         }
     }
 }
@@ -88,8 +100,7 @@ impl Premisa {
 impl Evaluable for Premisa {
     fn evaluar(&self,payload: &HashMap<String,String>) -> Evaluacion {
         match self {
-            Permiso(p) => p.evaluar(payload),
-            Excepcion(p) => p.evaluar(payload),
+            Permiso(p) | Excepcion(p) => p.evaluar(payload),
         }
     }
 }

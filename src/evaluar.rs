@@ -9,7 +9,7 @@ use crate::domain::{
 };
 
 pub fn evaluar(
-    premisas: Option<&Vec<Premisa>>,
+    premisas: Option<&[Premisa]>,
     payload: Option<&HashMap<String, String>>,
 ) -> Resultado {
     match payload {
@@ -19,8 +19,8 @@ pub fn evaluar(
 }
 
 fn evaluar_with_payload(
-    premisas: Option<&Vec<Premisa>>,
-    payload: &HashMap<String, String>,
+    premisas: Option<&[Premisa]>,
+    payload: &HashMap<String, String>
 ) -> Resultado {
     match premisas {
         Some(premisas) => return evaluar_with_valid_action(premisas, payload),
@@ -29,7 +29,7 @@ fn evaluar_with_payload(
 }
 
 fn evaluar_with_valid_action(
-    premisas: &Vec<Premisa>,
+    premisas: &[Premisa],
     payload: &HashMap<String, String>,
 ) -> Resultado {
     let mut traza = "No rules apply".to_owned();

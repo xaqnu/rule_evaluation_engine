@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 uuid = { version = "1.29.2", features = ["v4"] }
-
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }

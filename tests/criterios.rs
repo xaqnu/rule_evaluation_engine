@@ -94,7 +94,20 @@ fn cri_003_con_errores() {
         a,
         Resultado::new(
             Deny,
-            &format!("No rules apply\nError  en premisa con id {}", uuid,)
+            &format!("No rules apply\nError  en premisa con id {}", uuid)
         )
     );
+}
+#[test]
+fn cri_004() {
+    let mut premisas = vec![
+        un_permiso_que_siempre_aplica()
+    ];
+    let mut premisas_con_fallo = vec![
+        un_permiso_que_siempre_aplica(),
+        un_permiso_que_siempre_falla()
+    ];
+    premisas.get_mut(0).unwrap().desactivar();
+    premisas_con_fallo.get_mut(0).unwrap().desactivar();
+
 }
