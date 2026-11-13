@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::domain::{
-    Decision::Deny,
     Evaluacion::{Aplica, Error, NoAplica},
     Premisa::{Excepcion, Permiso},
 };
@@ -21,7 +20,7 @@ impl Condicion {
 }
 
 impl Evaluable for Condicion {
-    fn evaluar(&self,payload: &HashMap<String,String>) -> Evaluacion {
+    fn evaluar(&self,_payload: &HashMap<String,String>) -> Evaluacion {
         match self.expresion_cell.as_str() {
             "true" => Aplica,
             "false" => NoAplica,
@@ -41,6 +40,7 @@ pub struct PremisaDatos {
 }
 
 impl PremisaDatos {
+    #[must_use]
     pub fn new(condiciones: Vec<Condicion>, precedencia: Precedencia) -> Self {
         let uuid = Uuid::new_v4();
         Self {
@@ -62,7 +62,7 @@ impl Evaluable for PremisaDatos {
                 Aplica | Error => return evaluacion_final,
             }
         }
-        return evaluacion_final;
+        evaluacion_final
     }
 }
 
@@ -72,16 +72,19 @@ pub enum Premisa {
     Excepcion(PremisaDatos),
 }
 impl Premisa {
+    #[must_use]
     pub fn permiso(condiciones: Vec<Condicion>, precedencia: Precedencia) -> Self {
-        return Self::Permiso(PremisaDatos::new(condiciones, precedencia));
+        Self::Permiso(PremisaDatos::new(condiciones, precedencia))
     }
+    #[must_use]
     pub fn excepcion(condiciones: Vec<Condicion>, precedencia: Precedencia) -> Self {
-        return Self::Excepcion(PremisaDatos::new(condiciones, precedencia));
+        Self::Excepcion(PremisaDatos::new(condiciones, precedencia))
     }
 
+    #[must_use]
     pub fn uuid(&self) -> &Uuid {
         match self {
-            Permiso(p) | Excepcion(p) => return &p.uuid,
+            Permiso(p) | Excepcion(p) => &p.uuid,
         }
     }
 
@@ -90,9 +93,28 @@ impl Premisa {
             Permiso(p) | Excepcion(p) => p.activo = false,
        } 
     }
+    #[must_use]
     pub fn esta_activo(&self) -> bool{
         match self {
             Permiso(p) | Excepcion(p) => p.activo
+        }
+    }
+}
+impl PartialOrd for Premisa  {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match (self,other){
+            (Permiso(p), Permiso(q))
+            | (Permiso(p), Excepcion(q))
+            | (Excepcion(p), Permiso(q))
+            | (Excepcion(p), Excepcion(q)) => {
+                let (pa,pb) = p.precedencia;
+                let (qa,qb) = p.precedencia;
+                if p == q {return Some(std::cmp::Ordering::Equal);}
+                if pa < qa{return Some(std::cmp::Ordering::Less);}
+                if pa > qa {return Some(std::cmp::Ordering::Greater);}
+                if pa == qa && pb < qb {return Some(std::cmp::Ordering::Less);} 
+                return Some(std::cmp::Ordering::Greater)
+            }
         }
     }
 }
@@ -132,6 +154,9 @@ impl Resultado {
             backtrace,
         }
     }
+   pub fn backtrace(&self) -> &str{
+        return &self.backtrace;
+   }
 }
 
 pub trait Evaluable {

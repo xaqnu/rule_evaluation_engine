@@ -1,22 +1,16 @@
 use std::collections::HashMap;
 
 use rule_evaluation_enigine::{
-    domain::{Condicion, Decision::Deny, Premisa, Resultado},
+    domain::{Decision::Deny, Resultado},
     evaluar::evaluar,
 };
 
-fn un_permiso_que_siempre_falla() -> Premisa {
-    return Premisa::permiso(vec![Condicion::new("falla")], (1, 1));
-}
-fn un_permiso_que_siempre_aplica() -> Premisa {
-    return Premisa::permiso(vec![Condicion::new("true")], (1, 1));
-}
-fn un_permiso_que_nunca_aplica() -> Premisa {
-    return Premisa::permiso(vec![Condicion::new("false")], (1, 1));
-}
+use crate::situaciones_comunes::situaciones_comunes::*;
+
+mod situaciones_comunes;
 #[test]
 fn cri_001() {
-    let a: Resultado = evaluar(Some(&vec![un_permiso_que_siempre_aplica()]), None);
+    let a: Resultado = evaluar(Some(&[un_permiso_que_siempre_aplica()]), None);
 
     assert_eq!(
         a,
@@ -49,19 +43,10 @@ fn cri_002() {
 
 #[test]
 fn cri_003_sin_errores() {
-    let a: Resultado = evaluar(
-        Some(&vec![]),
-        Some(&HashMap::from([(
-            "accion".to_owned(),
-            "registered".to_owned(),
-        )])),
-    );
+    let a: Resultado = evaluar(Some(&[]), Some(&un_payload_con_accion_valida()));
     let b: Resultado = evaluar(
-        Some(&vec![un_permiso_que_nunca_aplica()]),
-        Some(&HashMap::from([(
-            "accion".to_owned(),
-            "registered".to_owned(),
-        )])),
+        Some(&[un_permiso_que_nunca_aplica()]),
+        Some(&un_payload_con_accion_valida()),
     );
     assert_eq!(
         a,
@@ -77,37 +62,63 @@ fn cri_003_sin_errores() {
 
 #[test]
 fn cri_003_con_errores() {
-    let premisas = vec![
+    let premisas = [
         un_permiso_que_nunca_aplica(),
         un_permiso_que_siempre_falla(),
     ];
-    let uuid = premisas.get(1).unwrap().uuid();
-    let a: Resultado = evaluar(
-        Some(&premisas),
-        Some(&HashMap::from([(
-            "accion".to_owned(),
-            "registered".to_owned(),
-        )])),
-    );
+    let uuid = premisas[1].uuid();
+    let a: Resultado = evaluar(Some(&premisas), Some(&un_payload_con_accion_valida()));
 
     assert_eq!(
         a,
         Resultado::new(
             Deny,
-            &format!("No rules apply\nError  en premisa con id {}", uuid)
+            format!("No rules apply\nError  en premisa con id {uuid}")
         )
     );
 }
 #[test]
 fn cri_004() {
-    let mut premisas = vec![
-        un_permiso_que_siempre_aplica()
-    ];
-    let mut premisas_con_fallo = vec![
+    let premisas = [
         un_permiso_que_siempre_aplica(),
-        un_permiso_que_siempre_falla()
+        una_excepcion_que_siempre_aplica(),
     ];
-    premisas.get_mut(0).unwrap().desactivar();
-    premisas_con_fallo.get_mut(0).unwrap().desactivar();
+    let premisas_con_fallo = [
+        una_excepcion_que_siempre_aplica(),
+        un_permiso_que_siempre_aplica(),
+        un_permiso_que_siempre_falla(),
+    ];
+    let a: Resultado = evaluar(Some(&premisas), Some(&un_payload_con_accion_valida()));
+    let b: Resultado = evaluar(
+        Some(&premisas_con_fallo),
+        Some(&un_payload_con_accion_valida()),
+    );
+    let uuid_excepcion = premisas[1].uuid();
+    let uuid_permiso1 = premisas[0].uuid();
+    assert_eq!(
+        a,
+        Resultado::new(
+            Deny,
+            format!(
+                "Excepcion {uuid_excepcion} ha desactivado:\n\
+                \tpermiso : {uuid_permiso1}"
+            )
+        )
+    );
 
+    let uuid_excepcion = premisas_con_fallo[0].uuid();
+    let uuid_permiso1 = premisas_con_fallo[1].uuid();
+    let uuid_permiso_fallo = premisas_con_fallo[2].uuid();
+    assert_eq!(
+        b,
+        Resultado::new(
+            Deny,
+            format!(
+                "Excepcion {uuid_excepcion} ha desactivado:\n\
+                \tpermiso : {uuid_permiso1}\n\
+                Error : uuid {uuid_permiso_fallo} no compila 
+                "
+            )
+        )
+    );
 }
