@@ -4,8 +4,6 @@ use rule_evaluation_enigine::{domain::Resultado, evaluar::evaluar};
 
 use crate::situaciones_comunes::situaciones_comunes::*;
 
-
-
 #[test]
 fn res_001() {
     let premisas = [
@@ -17,8 +15,9 @@ fn res_001() {
     let uuid_permiso1 = premisas[0].uuid();
 
     let backtrace = format!(
-        "Excepcion {uuid_excepcion} ha desactivado:\n\
-                \tpermiso : {uuid_permiso1}"
+        "No active rules apply:\n\
+                la restricción {uuid_excepcion} ha desactivado las siguientes premisas aplicables:\n\
+                \t Permiso con id: {uuid_permiso1}"
     );
     let resultado: Resultado = evaluar(Some(&premisas), Some(&un_payload_con_accion_valida()));
     assert_eq!(

@@ -73,7 +73,11 @@ fn cri_003_con_errores() {
         a,
         Resultado::new(
             Deny,
-            format!("No rules apply\nError  en premisa con id {uuid}")
+            format!(
+                "No rules apply\n\
+                Se han detectado los siguientes errores:\
+                \n\t Permiso con id: {uuid}"
+            )
         )
     );
 }
@@ -100,8 +104,9 @@ fn cri_004() {
         Resultado::new(
             Deny,
             format!(
-                "Excepcion {uuid_excepcion} ha desactivado:\n\
-                \tpermiso : {uuid_permiso1}"
+                "No active rules apply:\n\
+                la restricción {uuid_excepcion} ha desactivado las siguientes premisas aplicables:\n\
+                \t Permiso con id: {uuid_permiso1}"
             )
         )
     );
@@ -114,10 +119,11 @@ fn cri_004() {
         Resultado::new(
             Deny,
             format!(
-                "Excepcion {uuid_excepcion} ha desactivado:\n\
-                \tpermiso : {uuid_permiso1}\n\
-                Error : uuid {uuid_permiso_fallo} no compila 
-                "
+                "No active rules apply:\n\
+                la restricción {uuid_excepcion} ha desactivado las siguientes premisas aplicables:\n\
+                \t Permiso con id: {uuid_permiso1}\n\
+                Se han detectado los siguientes errores:\n\
+                \t Permiso con id: {uuid_permiso_fallo}"
             )
         )
     );
