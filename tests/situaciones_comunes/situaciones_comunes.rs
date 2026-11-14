@@ -16,9 +16,6 @@ pub fn una_excepcion_que_siempre_aplica() -> Premisa {
     Premisa::excepcion(vec![Condicion::new("true")], Precedencia(1, 2))
 }
 
-pub fn un_payload_con_accion_valida() -> HashMap<String,String>{
-    HashMap::from([(
-            "accion".to_owned(),
-            "registered".to_owned(),
-        )])
+pub fn un_payload_con_accion_valida() -> HashMap<String, String> {
+    HashMap::from([("accion".to_owned(), "registered".to_owned())])
 }

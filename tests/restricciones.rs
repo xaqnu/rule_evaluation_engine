@@ -24,5 +24,5 @@ fn res_001() {
         resultado.backtrace(),
         backtrace,
         "la excepcion deshabilita el permiso"
-    )
+    );
 }

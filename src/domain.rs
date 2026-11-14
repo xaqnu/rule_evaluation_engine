@@ -86,6 +86,7 @@ impl Premisa {
             Permiso(p) | Excepcion(p) => &p.uuid,
         }
     }
+    #[must_use]
     pub fn variante(&self) -> String {
         match self {
             Permiso(_) => "Permiso".to_string(),
@@ -114,23 +115,20 @@ impl Ord for Precedencia {
         if pa == qa && pb < qb {
             return std::cmp::Ordering::Less;
         }
-        return std::cmp::Ordering::Greater;
+        std::cmp::Ordering::Greater
     }
 }
 impl Ord for Premisa {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match (self, other) {
-            (Permiso(p), Permiso(q))
-            | (Permiso(p), Excepcion(q))
-            | (Excepcion(p), Permiso(q))
-            | (Excepcion(p), Excepcion(q)) => p.precedencia.cmp(&q.precedencia),
+            (Permiso(p) | Excepcion(p), Permiso(q) | Excepcion(q)) => p.precedencia.cmp(&q.precedencia),
         }
     }
 }
 
 impl PartialOrd for Premisa {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        return Some(self.cmp(other));
+        Some(self.cmp(other))
     }
 }
 
@@ -169,8 +167,9 @@ impl Resultado {
             backtrace,
         }
     }
+    #[must_use]
     pub fn backtrace(&self) -> &str {
-        return &self.backtrace;
+        &self.backtrace
     }
 }
 

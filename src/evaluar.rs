@@ -40,14 +40,14 @@ fn evaluar_with_valid_action(premisas: &[Premisa], payload: &HashMap<String, Str
         .filter(|r| matches!(r.evaluar(payload), Error))
         .collect();
 
-    let mut traza = "".to_string();
+    let mut traza = String::new();
     if !premisas_que_fallan.is_empty() {
         traza.push_str("\nSe han detectado los siguientes errores:");
         premisas_que_fallan.iter().for_each(|p| {
             traza.push_str(&format!("\n\t {} con id: {}", p.variante(), p.uuid()));
         });
     }
-    let mut log = "".to_string();
+    let mut log = String::new();
     if premisas_que_aplican.is_empty() {
         log.push_str("No rules apply");
         log.push_str(&traza);
@@ -71,7 +71,7 @@ fn evaluar_with_valid_action(premisas: &[Premisa], payload: &HashMap<String, Str
                 log.push_str(&format!("\n\t {} con id: {}", p.variante(), p.uuid()));
             });
             log.push_str(&traza);
-            return Resultado::new(Deny, log);
+            Resultado::new(Deny, log)
         }
     }
 }
