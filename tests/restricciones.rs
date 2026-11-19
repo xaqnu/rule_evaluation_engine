@@ -1,6 +1,9 @@
 mod situaciones_comunes;
 
-use rule_evaluation_enigine::{domain::Resultado, evaluar::evaluar};
+use rule_evaluation_enigine::{
+    domain::{Backtrace, Resultado},
+    evaluar::evaluar,
+};
 
 use crate::situaciones_comunes::situaciones_comunes::*;
 
@@ -14,15 +17,11 @@ fn res_001() {
     let uuid_excepcion = premisas[1].uuid();
     let uuid_permiso1 = premisas[0].uuid();
 
-    let backtrace = format!(
-        "No active rules apply:\n\
-                la restricción {uuid_excepcion} ha desactivado las siguientes premisas aplicables:\n\
-                \t Permiso con id: {uuid_permiso1}"
-    );
+    let backtrace = Backtrace::new(None, Some(uuid_excepcion), Some(vec![uuid_permiso1]), None);
     let resultado: Resultado = evaluar(Some(&premisas), Some(&un_payload_con_accion_valida()));
     assert_eq!(
         resultado.backtrace(),
-        backtrace,
+        &backtrace,
         "la excepcion deshabilita el permiso"
     );
 }

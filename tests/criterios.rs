@@ -1,7 +1,12 @@
 use std::collections::HashMap;
 
 use rule_evaluation_enigine::{
-    domain::{Decision::Deny, Resultado},
+    domain::{
+        Backtrace,
+        Decision::Deny,
+        Resultado,
+        UsageError::{AcionNotRegistered, NoPayload},
+    },
     evaluar::evaluar,
 };
 
@@ -10,11 +15,11 @@ use crate::situaciones_comunes::situaciones_comunes::*;
 mod situaciones_comunes;
 #[test]
 fn cri_001() {
-    let a: Resultado = evaluar(Some(&[un_permiso_que_siempre_aplica()]), None);
-
+    let premisas =[un_permiso_que_siempre_aplica()];
+    let a: Resultado = evaluar(Some(&premisas), None);
     assert_eq!(
         a,
-        Resultado::new(Deny, "Error: No payload supplyed"),
+        Resultado::new(Deny, Backtrace::new(Some(NoPayload), None, None, None)),
         "el payload esta vacio"
     );
 }
@@ -31,31 +36,39 @@ fn cri_002() {
     );
     assert_eq!(
         a,
-        Resultado::new(Deny, "Error: Action not provided or not registered"),
+        Resultado::new(
+            Deny,
+            Backtrace::new(Some(AcionNotRegistered), None, None, None)
+        ),
         "no hay acción en el payload"
     );
     assert_eq!(
         b,
-        Resultado::new(Deny, "Error: Action not provided or not registered"),
+        Resultado::new(
+            Deny,
+            Backtrace::new(Some(AcionNotRegistered), None, None, None)
+        ),
         "la accion no está registrada"
     );
 }
 
 #[test]
 fn cri_003_sin_errores() {
+    
+    let premisas =[un_permiso_que_nunca_aplica()];
     let a: Resultado = evaluar(Some(&[]), Some(&un_payload_con_accion_valida()));
     let b: Resultado = evaluar(
-        Some(&[un_permiso_que_nunca_aplica()]),
+        Some(&premisas),
         Some(&un_payload_con_accion_valida()),
     );
     assert_eq!(
         a,
-        Resultado::new(Deny, "No rules apply"),
+        Resultado::new(Deny, Backtrace::new(None, None, None, None)),
         "no se ha configurado ningún permiso"
     );
     assert_eq!(
         b,
-        Resultado::new(Deny, "No rules apply"),
+        Resultado::new(Deny, Backtrace::new(None, None, None, None)),
         "Hay permisos configurados pero no aplican"
     );
 }
@@ -71,14 +84,8 @@ fn cri_003_con_errores() {
 
     assert_eq!(
         a,
-        Resultado::new(
-            Deny,
-            format!(
-                "No rules apply\n\
-                Se han detectado los siguientes errores:\
-                \n\t Permiso con id: {uuid}"
-            )
-        )
+        Resultado::new(Deny, Backtrace::new(None, None, None, Some(vec![uuid]))),
+        "Hay permisos configurados pero no aplican, y hay errores"
     );
 }
 #[test]
@@ -103,12 +110,9 @@ fn cri_004() {
         a,
         Resultado::new(
             Deny,
-            format!(
-                "No active rules apply:\n\
-                la restricción {uuid_excepcion} ha desactivado las siguientes premisas aplicables:\n\
-                \t Permiso con id: {uuid_permiso1}"
-            )
-        )
+            Backtrace::new(None, Some(uuid_excepcion), Some(vec![uuid_permiso1]), None)
+        ),
+        "Una excepcion a deshabilitado el permiso"
     );
 
     let uuid_excepcion = premisas_con_fallo[0].uuid();
@@ -118,15 +122,13 @@ fn cri_004() {
         b,
         Resultado::new(
             Deny,
-            format!(
-                "No active rules apply:\n\
-                la restricción {uuid_excepcion} ha desactivado las siguientes premisas aplicables:\n\
-                \t Permiso con id: {uuid_permiso1}\n\
-                Se han detectado los siguientes errores:\n\
-                \t Permiso con id: {uuid_permiso_fallo}"
+            Backtrace::new(
+                None,
+                Some(uuid_excepcion),
+                Some(vec![uuid_permiso1]),
+                Some(vec![uuid_permiso_fallo])
             )
-        )
+        ),
+        "Una excepcion ha deshabilitado el permiso y habia un fallo"
     );
 }
-
-
